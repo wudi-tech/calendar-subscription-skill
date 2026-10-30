@@ -1,0 +1,4 @@
+interface:
+  display_name: "日历订阅同步"
+  short_description: "把计划发布成可持续更新的 ICS 日历订阅，处理改期、提醒与结果核验"
+  default_prompt: "使用 $publish-calendar-feed，沿用已有订阅地址把我的计划更新到日历，并核验发布结果。"

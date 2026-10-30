@@ -1,0 +1,25 @@
+{
+  "feed_id": "synthetic-study-demo",
+  "calendar_name": "学习日历示例（合成数据）",
+  "events": [
+    {
+      "id": "german-lesson-2030-01-08",
+      "title": "德语课程示例",
+      "start": "2030-01-08T09:00:00+08:00",
+      "end": "2030-01-08T10:00:00+08:00",
+      "updated_at": "2030-01-01T12:00:00+08:00",
+      "sequence": 0,
+      "description": "仅用于演示，不对应任何人的实际课程。",
+      "alarm_minutes": 10
+    },
+    {
+      "id": "reading-practice-2030-01-08",
+      "title": "阅读练习示例",
+      "start": "2030-01-08T14:00:00+08:00",
+      "end": "2030-01-08T14:45:00+08:00",
+      "updated_at": "2030-01-01T12:00:00+08:00",
+      "sequence": 0,
+      "description": "先练习，再复盘。"
+    }
+  ]
+}
