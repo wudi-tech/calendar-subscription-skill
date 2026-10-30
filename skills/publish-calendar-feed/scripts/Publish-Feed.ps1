@@ -1,6 +1,7 @@
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName = "Single")]
 param(
-    [Parameter(Mandatory = $true)][string]$InputPath,
+    [Parameter(Mandatory = $true, ParameterSetName = "Single")][string]$InputPath,
+    [Parameter(Mandatory = $true, ParameterSetName = "Multi")][string]$ManifestPath,
     [Parameter(Mandatory = $true)][string]$PublishRepo,
     [string]$Python = "python",
     [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._-]*\.ics$')][string]$FeedName = "study-plan.ics",
@@ -9,8 +10,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Repository = (Resolve-Path -LiteralPath $PublishRepo).Path
-$Source = (Resolve-Path -LiteralPath $InputPath).Path
-$Generator = Join-Path $PSScriptRoot "build_feed.py"
+if ($PSCmdlet.ParameterSetName -eq "Multi") {
+    $Source = (Resolve-Path -LiteralPath $ManifestPath).Path
+    $Generator = Join-Path $PSScriptRoot "build_calendar.py"
+    $SourceArgument = "--manifest"
+} else {
+    $Source = (Resolve-Path -LiteralPath $InputPath).Path
+    $Generator = Join-Path $PSScriptRoot "build_feed.py"
+    $SourceArgument = "--input"
+}
 $Destination = Join-Path $Repository $FeedName
 $LockPath = Join-Path $Repository ".git/calendar-feed-publish.lock"
 $Lock = $null
@@ -56,7 +64,7 @@ try {
         }
     }
 
-    & $Python $Generator --input $Source --output $Destination
+    & $Python $Generator $SourceArgument $Source --output $Destination
     if ($LASTEXITCODE -ne 0) { throw "Feed generation failed; publication stopped." }
     if (-not $Publish) {
         Write-Host "Generated locally. Use -Publish only when publication is authorized."

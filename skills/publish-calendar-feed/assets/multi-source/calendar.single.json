@@ -1,0 +1,6 @@
+{
+  "calendar_name": "单来源云端示例（合成数据）",
+  "sources": [
+    {"id": "study", "path": "sources/study.json", "format": "json"}
+  ]
+}

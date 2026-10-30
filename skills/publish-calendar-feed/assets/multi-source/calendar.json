@@ -1,0 +1,8 @@
+{
+  "calendar_name": "合并订阅示例（合成数据）",
+  "sources": [
+    {"id": "legacy", "path": "sources/legacy.ics", "format": "ics"},
+    {"id": "study", "path": "sources/study.json", "format": "json"},
+    {"id": "thesis", "path": "sources/thesis.json", "format": "json"}
+  ]
+}

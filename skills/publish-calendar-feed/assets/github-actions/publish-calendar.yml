@@ -1,0 +1,57 @@
+name: Publish calendar subscription
+
+"on":
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 0 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calendar-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ vars.CALENDAR_CLOUD_PUBLISH == 'true' && github.ref_name == github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CALENDAR_MANIFEST: ${{ vars.CALENDAR_MANIFEST || 'calendar.json' }}
+      CALENDAR_SITE: ${{ runner.temp }}/calendar-feed-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.14'
+      - name: Install merge dependency
+        run: python -m pip install -r tools/calendar/requirements-merge.txt
+      - name: Build and validate every enabled source
+        id: generate
+        run: python tools/calendar/build_calendar.py --manifest "$CALENDAR_MANIFEST" --output "$CALENDAR_SITE/study-plan.ics"
+      - name: Record source revision
+        run: git rev-parse HEAD > "$CALENDAR_SITE/source-commit.txt"
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: ${{ env.CALENDAR_SITE }}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v6.0.0
+      - uses: actions/deploy-pages@v5.0.1
+        id: deployment

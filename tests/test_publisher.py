@@ -90,6 +90,30 @@ class PublisherTests(unittest.TestCase):
         self.assertNotEqual(failed.returncode, 0)
         self.assertFalse((self.repo / 'study-plan.ics').exists())
 
+    def test_manifest_mode_publishes_existing_and_new_sources(self):
+        from icalendar import Calendar
+        from test_merge import LEGACY
+        (self.root / 'legacy.ics').write_bytes(LEGACY)
+        manifest = self.root / 'calendar.json'
+        manifest.write_text(json.dumps({'calendar_name': 'Combined', 'sources': [
+            {'id': 'study', 'path': 'events.json', 'format': 'json'},
+            {'id': 'legacy', 'path': 'legacy.ics', 'format': 'ics'},
+        ]}), encoding='utf-8')
+        self.command[self.command.index('-InputPath')] = '-ManifestPath'
+        self.command[self.command.index(str(self.source))] = str(manifest)
+        result = self.invoke()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        published = subprocess.run(['git', '--git-dir', str(self.remote), 'show', 'main:study-plan.ics'],
+                                   capture_output=True, check=True).stdout
+        events = Calendar.from_ical(published).walk('VEVENT')
+        self.assertEqual(len(events), 3)
+        self.assertEqual(sum(str(event['uid']) == 'existing-series@example.invalid' for event in events), 2)
+
+    def test_single_and_manifest_parameters_are_mutually_exclusive(self):
+        failed = subprocess.run(self.command + ['-ManifestPath', str(self.source)], capture_output=True)
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertFalse((self.repo / 'study-plan.ics').exists())
+
 
 if __name__ == '__main__':
     unittest.main()

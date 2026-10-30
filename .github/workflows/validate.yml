@@ -1,0 +1,33 @@
+name: Validate calendar skill
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.10', '3.14']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m unittest discover -s tests -v
+      - name: Build synthetic merged feed in the cloud
+        run: python skills/publish-calendar-feed/scripts/build_calendar.py --manifest skills/publish-calendar-feed/assets/multi-source/calendar.json --output output/study-plan.ics
+      - name: Check single-source compatibility
+        run: python skills/publish-calendar-feed/scripts/build_feed.py --input skills/publish-calendar-feed/assets/events.example.json --check
